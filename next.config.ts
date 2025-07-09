@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  allowedDevOrigins: ["*.ngrok-free.app", "cdn.haitrieu.com"],
+  reactStrictMode: false,
+  allowedDevOrigins: ["*.ngrok-free.app"],
 };
 
 export default nextConfig;

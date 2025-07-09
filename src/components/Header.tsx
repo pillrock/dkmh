@@ -1,52 +1,30 @@
-"use client";
-import { useDataUser } from "@/contexts/dataUser";
-import { LogOut, WifiIcon } from "lucide-react";
+import { LogOutIcon } from "lucide-react";
 import Image from "next/image";
-import { motion } from "motion/react";
-import {
-  nameKeyLocalStorage,
-  removeFromLocalStorage,
-} from "@/lib/storage/localStorage";
-// Header Component
-export default function Header() {
-  const { userInfoString_context, setIsLogin, setUserInfoString_context } =
-    useDataUser();
 
-  const handleLogout = () => {
-    setUserInfoString_context("");
-    removeFromLocalStorage(nameKeyLocalStorage.access_token);
-    setIsLogin(false);
-  };
+function Header({ ma_sv, ten_day_du }: { ma_sv: string; ten_day_du: string }) {
   return (
-    <header className="bg-white shadow-md px-4 md:px-[15%] 2xl:px-[20%] py-3 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
+    <div className="md:px-[15%] z-10 bg-white px-2 fixed top-0 w-full items-center shadow-md flex justify-between py-2 xl:px-[20%]">
+      <div>
         <Image
-          src="/vnua.png"
-          alt="User Avatar"
-          width={30}
-          height={30}
+          src={"/vnua.webp"}
           quality={100}
+          alt="logo"
+          width={35}
+          height={35}
         />
       </div>
-
-      <div className="flex items-center space-x-4">
-        <span>
-          <WifiIcon size={19} color="green" />
-        </span>
-        {userInfoString_context && (
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-700">{userInfoString_context}</span>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleLogout}
-              className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-            >
-              <LogOut size={19} />
-            </motion.button>
-          </div>
+      <div className="flex gap-x-2  items-center">
+        {ma_sv && ten_day_du && (
+          <span>
+            {ma_sv}, {ten_day_du}
+          </span>
         )}
+        <span className="p-2 bg-red-300 text-red-700 cursor-pointer rounded-md">
+          <LogOutIcon size={19} />
+        </span>
       </div>
-    </header>
+    </div>
   );
 }
+
+export default Header;

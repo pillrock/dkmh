@@ -32,10 +32,12 @@ interface data_ds_mon_hoc extends data_ds_lop {
 }
 interface data_ds_nhom_to {
   ma_mon: string;
+  is_dk: boolean;
   id_to_hoc: string;
   id_mon_hoc: string;
   so_tc_so: number;
   nhom_to: string;
+  to: string;
   ds_lop: string[];
   ds_khoa: string[];
   sl_dk: number;

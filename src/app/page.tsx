@@ -1,10 +1,7 @@
-import Dashboard from "@/components/Dashboard";
-import { DataUserProvider } from "@/contexts/dataUser";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return (
-    <DataUserProvider>
-      <Dashboard />
-    </DataUserProvider>
-  );
+function page() {
+  return redirect("/dang-ky-mon-hoc");
 }
+
+export default page;

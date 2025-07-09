@@ -4,15 +4,20 @@ export async function POST(req: NextRequest) {
   const data = await req.json();
   try {
     const dataRes = await vnuaAPI.login(data.username, data.password);
-    return NextResponse.json({ ok: true, data: dataRes, message: "success" });
+    return NextResponse.json(
+      { ok: true, data: dataRes, message: "success" },
+      { status: 200 }
+    );
   } catch (error: unknown) {
     if (error instanceof Error) {
-      
       console.log("#384748", error);
-      return NextResponse.json({
-        ok: false,
-        message: JSON.stringify(error?.message),
-      });
+      return NextResponse.json(
+        {
+          ok: false,
+          message: JSON.stringify(error?.message),
+        },
+        { status: 500 }
+      );
     }
   }
 }

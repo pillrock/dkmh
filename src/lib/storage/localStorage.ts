@@ -1,5 +1,7 @@
 export const nameKeyLocalStorage = {
   access_token: "accessToken-service",
+  dataUser: "data-user",
+  subjectsChosen: "subjects-Chosen",
 };
 
 export const saveToLocalStorage = <T>(key: string, value: T): void => {

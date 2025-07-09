@@ -2,7 +2,7 @@
 
 import { createContext, ReactNode, useContext, useState } from "react";
 
-type dataUserType = {
+type GlobalStateType = {
   userInfoString_context: string;
   isLoading: boolean;
   isLogin: boolean;
@@ -11,15 +11,15 @@ type dataUserType = {
   setUserInfoString_context: (b: string) => void;
 };
 
-const DataUserContext = createContext<dataUserType | null>(null);
+const GlobalStateContext = createContext<GlobalStateType | null>(null);
 
-export const DataUserProvider = ({ children }: { children: ReactNode }) => {
+export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const [userInfoString_context, setUserInfoString_context] =
     useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   return (
-    <DataUserContext.Provider
+    <GlobalStateContext.Provider
       value={{
         isLogin,
         setIsLogin,
@@ -30,15 +30,15 @@ export const DataUserProvider = ({ children }: { children: ReactNode }) => {
       }}
     >
       {children}
-    </DataUserContext.Provider>
+    </GlobalStateContext.Provider>
   );
 };
 
-export default DataUserContext;
-export const useDataUser = () => {
-  const context = useContext(DataUserContext);
+export default GlobalStateContext;
+export const useGlobalState = () => {
+  const context = useContext(GlobalStateContext);
   if (!context) {
-    throw new Error("useDataUser must be used within a DataUserProvider");
+    throw new Error("useGlobalState must be used within a GlobalStateProvider");
   }
   return context;
 };

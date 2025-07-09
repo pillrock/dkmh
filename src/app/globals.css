@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+hr {
+  color: rgb(241, 241, 241);
+}
+
+td,
+th {
+  white-space: nowrap;
+  border-right: 1px white;
+  padding: 8px;
+  text-align: center;
+}
+
+td,
+th {
+  border: 1px rgb(219, 219, 219) solid;
+}

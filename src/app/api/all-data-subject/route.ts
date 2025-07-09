@@ -3,7 +3,7 @@ import * as vnuaAPI from "@/services/api/vnua/api";
 export async function POST(req: NextRequest) {
   const data = await req.json();
   try {
-    const dataRes = await vnuaAPI.getInfoStudent(data.access_token);
+    const dataRes = await vnuaAPI.getAllDataSubject(data.access_token);
     return NextResponse.json(
       { ok: true, data: dataRes, message: "success" },
       { status: 200 }
