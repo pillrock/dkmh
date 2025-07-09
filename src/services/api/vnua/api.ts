@@ -1,17 +1,30 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import {
   AllDataSubject_DATARESPONSE,
   infoStudent_DATARESPONSE,
   Login_DATARESPONSE,
 } from "./dataTypeResponse";
-const baseApi = axios.create({
+import { getRandomProxy } from "../../proxy";
+
+const isProd = process.env.NODE_ENV == "production";
+console.log(process.env.NODE_ENV);
+
+const axiosConfig: AxiosRequestConfig = {
   baseURL: "https://daotao.vnua.edu.vn",
-  timeout: 60000 * 5,
+  timeout: 60_000 * 5,
   headers: {
     Accept: "application/json, text/plain, */*",
   },
-});
+};
 
+if (isProd) {
+  axiosConfig.httpAgent = getRandomProxy();
+  axiosConfig.httpsAgent = getRandomProxy();
+}
+
+console.log("Axios Config:", axiosConfig);
+
+const baseApi = axios.create(axiosConfig);
 const API_ENDPOINT = {
   login: "/api/auth/login",
   checkAccessToken: "/api/sms/w-locketquaduyetsinhvien",
@@ -36,6 +49,8 @@ export const login = async (
   password: string
 ): Promise<Login_DATARESPONSE> => {
   try {
+    console.log("isProd: ", isProd);
+
     const rawData = `username=${username}&password=${password}&grant_type=password`;
     const res = await baseApi.post(API_ENDPOINT.login, rawData);
     return res.data;

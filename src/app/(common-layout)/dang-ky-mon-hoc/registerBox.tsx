@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { DataSubjectOntable } from "./page";
 import Modal from "@/components/common/Modal";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Loading from "@/components/common/Loading";
 import {
   getFromLocalStorage,
@@ -38,13 +38,14 @@ function RegisterBox({
   const [statusSubject, setStatusSubject] = useState<
     Record<string, StatusSubject>
   >({});
+  const startRegisterRef = useRef(false);
+
   const timeDelay = 2000;
   const access_token = useMemo(() => {
     return (
       (getFromLocalStorage(nameKeyLocalStorage.access_token) as string) ?? ""
     );
   }, []);
-  console.log(typeof access_token);
 
   useEffect(() => {
     if (data && data.length > 0) {
@@ -74,41 +75,59 @@ function RegisterBox({
       return res.data.data.data;
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        return error.response?.data.message ?? error?.message;
+        return {
+          is_thanh_cong: false,
+          thong_bao_loi: "proxy ERROR: " + error?.response?.data.message,
+        };
       }
+      return {
+        is_thanh_cong: false,
+        thong_bao_loi: "Unknown error",
+      };
     }
   };
+  console.log("RERENDER");
+
   const handleRegisterSubject = async () => {
-    for (const subject of displayData) {
-      await delay(timeDelay);
-      callApiRegisterSubject(subject.id_to_hoc)
-        .then((result) => {
-          setStatusSubject((prev) => ({
-            ...prev,
-            [subject.id_to_hoc]: {
-              status: result.is_thanh_cong ? "done" : "fail",
-              message: result.thong_bao_loi,
-            },
-          }));
-          console.log(result);
-        })
-        .catch((error) => {
-          setStatusSubject((prev) => ({
-            ...prev,
-            [subject.id_to_hoc]: {
-              status: "fail",
-              message: error.message,
-            },
-          }));
-        });
-    }
-    // console.log(displayData);
-    // const to1 = displayData[0].id_to_hoc;
-    // const resRegisterSubject = await callApiRegisterSubject(to1);
-    // const coreDataRes = resRegisterSubject?.data.data;
-    // if (!coreDataRes?.is_thanh_cong) {
-    //   console.log("Khoong thành công");
-    // }
+    startRegisterRef.current = true;
+    const tasks = displayData.map(async (subject) => {
+      setStatusSubject((prev) => ({
+        ...prev,
+        [subject.id_to_hoc]: {
+          status: "waiting",
+          message: "",
+        },
+      }));
+
+      let result: { is_thanh_cong: string; thong_bao_loi: string };
+      do {
+        result = await callApiRegisterSubject(subject.id_to_hoc);
+
+        setStatusSubject((prev) => ({
+          ...prev,
+          [subject.id_to_hoc]: {
+            status: result.is_thanh_cong ? "done" : "fail",
+            message: result.thong_bao_loi,
+          },
+        }));
+
+        if (!result.is_thanh_cong) {
+          //delay trong 1 môn, call lại nếu fail
+          await delay(timeDelay);
+        }
+        if (
+          result.thong_bao_loi ===
+          "Trùng thời khóa biểu, tổng cộng trùng 20 tiết, vượt quá số tiết được phép trùng 15 tiết/ học kỳ."
+        ) {
+          break;
+        }
+        // delay mỗi môn
+      } while (!result.is_thanh_cong && startRegisterRef.current);
+      await delay(2000);
+    });
+
+    await Promise.all(tasks);
+    console.log("pause or all done");
   };
   return (
     <>
@@ -121,16 +140,27 @@ function RegisterBox({
       {isOpenModal && (
         <Modal onClose={() => setIsOpenModal(!isOpenModal)}>
           <div className="flex flex-col gap-y-3 p-2">
-            <div className="flex justify-between sticky top-0">
+            <div className="flex justify-between sticky top-0 z-20">
               <h1 className="pl-2 flex-1 p-1 border-l-[5px] bg-white border-green-500  text-xl">
                 Môn học đã chọn
               </h1>
-              <button
-                onClick={handleRegisterSubject}
-                className="absolute text-green-800 font-semibold cursor-pointer border-none hover:opacity-80 right-0 top-0 mt-2 mr-2 bg-green-300 p-2"
-              >
-                Đăng ký tất cả
-              </button>
+              {startRegisterRef.current ? (
+                <button
+                  onClick={() => {
+                    startRegisterRef.current = false;
+                  }}
+                  className="absolute text-red-800 font-semibold cursor-pointer border-none hover:opacity-80 right-0 top-0 mt-2 mr-2 bg-red-300 p-2"
+                >
+                  Dừng đăng ký
+                </button>
+              ) : (
+                <button
+                  onClick={handleRegisterSubject}
+                  className="absolute text-green-800 font-semibold cursor-pointer border-none hover:opacity-80 right-0 top-0 mt-2 mr-2 bg-green-300 p-2"
+                >
+                  Đăng ký tất cả
+                </button>
+              )}
             </div>
             <div className=" p-4  pl-0 flex flex-col gap-y-4">
               {displayData && displayData.length > 0 ? (

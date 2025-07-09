@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 export async function middleware(req: NextRequest) {
   const body = await req.json();
   if (!body?.access_token) {
+    NextResponse.redirect("/dang-nhap");
     return NextResponse.json(
       {
         ok: false,
@@ -19,5 +20,6 @@ export const config = {
     "/api/all-data-subject",
     "/api/check-token-alive",
     "/api/info-student",
+    "/api/register-subject",
   ],
 };

@@ -5,7 +5,7 @@ const Loading = ({ global = true }: { global?: boolean }) => {
     <div
       className={`${
         global && "fixed bg-black/20 w-screen top-0 left-0 h-screen z-30"
-      }  `}
+      }  z-10`}
     >
       <div
         className={`${
