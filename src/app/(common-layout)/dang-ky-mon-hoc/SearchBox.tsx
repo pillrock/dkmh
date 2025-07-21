@@ -27,7 +27,6 @@ export default function SearchBox({
       return [];
     }
     console.log("LỌC");
-
     return data.filter((item) =>
       item.ten.toLowerCase().includes(deouncedInputSearch.toLowerCase())
     );
