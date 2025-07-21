@@ -11,7 +11,7 @@ console.log(process.env.NODE_ENV);
 
 const axiosConfig: AxiosRequestConfig = {
   baseURL: "https://daotao.vnua.edu.vn",
-  timeout: 60_000 * 5,
+  timeout: 60000 * 5,
   headers: {
     Accept: "application/json, text/plain, */*",
   },
@@ -32,6 +32,7 @@ const API_ENDPOINT = {
   allDataSubject: "/api/dkmh/w-locdsnhomto",
   allDataSubjectSigned: "/dkmh/api/dkmh/w-locdskqdkmhsinhvien",
   registerSubject: "/api/dkmh/w-xulydkmhsinhvien",
+  subjectsRegistered: "api/dkmh/w-locdskqdkmhsinhvien",
 };
 const handleError = (error: unknown, context: string): never => {
   if (axios.isAxiosError(error)) {
@@ -128,6 +129,49 @@ export const registerSubject = async ({
       },
     };
     const res = await baseApi.post(API_ENDPOINT.registerSubject, data, {
+      headers: { Authorization: authString },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    throw handleError(error, "registerSubject error: ");
+  }
+};
+export const cancelSubject = async ({
+  access_token,
+  id_to_hoc,
+}: {
+  access_token: string;
+  id_to_hoc: string;
+}) => {
+  try {
+    const authString = `Bearer ${access_token}`;
+    const data = {
+      filter: {
+        id_to_hoc,
+        is_checked: false,
+      },
+    };
+    const res = await baseApi.post(API_ENDPOINT.registerSubject, data, {
+      headers: { Authorization: authString },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    throw handleError(error, "cancelSubject error: ");
+  }
+};
+
+export const getSubjectsRegistered = async ({
+  access_token,
+}: {
+  access_token: string;
+}) => {
+  try {
+    const authString = `Bearer ${access_token}`;
+    const data = {
+      is_CVHT: false,
+      is_Clear: false,
+    };
+    const res = await baseApi.post(API_ENDPOINT.subjectsRegistered, data, {
       headers: { Authorization: authString },
     });
     return res.data;

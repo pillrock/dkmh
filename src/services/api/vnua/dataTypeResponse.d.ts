@@ -32,9 +32,11 @@ interface data_ds_mon_hoc extends data_ds_lop {
 }
 interface data_ds_nhom_to {
   ma_mon: string;
+  enable: boolean;
   is_dk: boolean;
   id_to_hoc: string;
   id_mon_hoc: string;
+  so_tc: string;
   so_tc_so: number;
   nhom_to: string;
   to: string;
@@ -44,6 +46,8 @@ interface data_ds_nhom_to {
   sl_cp: number;
   sl_cl: number;
   tkb: string;
+  lop: string;
+  ten_mon: string;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -82,4 +86,11 @@ export interface infoStudent_DATARESPONSE<T = unknown> {
   result: boolean;
   data: T;
   code: number;
+}
+////////////////////////// get subjects registered ///
+export interface ds_kqdkmh {
+  to_hoc: data_ds_nhom_to;
+  enable_xoa: boolean;
+  dien_giai_enable_xoa: string;
+  ngay_dang_ky: string;
 }
