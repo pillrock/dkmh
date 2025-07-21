@@ -18,6 +18,7 @@ import SearchBox from "./SearchBox";
 import TableBox from "./tableBox";
 import RegisterBox from "./registerBox";
 import SubjectsRegistered from "./SubjectsRegistered";
+import { ROUTES } from "@/lib/constants/routes";
 // import TestCallApi from "./TestCallApi";
 
 type dataUser = {
@@ -131,7 +132,7 @@ function RegisterSubject() {
   useEffect(() => {
     if (!isLoad && data) {
       if (!data.ok) {
-        router.push("/dang-nhap");
+        router.push(ROUTES.LOGIN);
       }
     }
     // setIsLoading(isLoad);

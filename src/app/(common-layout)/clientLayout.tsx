@@ -3,6 +3,7 @@
 import Loading from "@/components/common/Loading";
 import Header from "@/components/Header";
 import { useGlobalState } from "@/contexts/globalState";
+import { ROUTES } from "@/lib/constants/routes";
 import {
   getFromLocalStorage,
   nameKeyLocalStorage,
@@ -33,7 +34,8 @@ function ClientLayout({ children }: { children: ReactNode }) {
     localStorage.removeItem(nameKeyLocalStorage.access_token);
     localStorage.removeItem(nameKeyLocalStorage.dataUser);
     setDataUser(null);
-    router.push("/dang-nhap");
+
+    router.push(ROUTES.LOGIN);
   };
 
   return (
