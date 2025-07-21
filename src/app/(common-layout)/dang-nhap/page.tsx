@@ -7,6 +7,7 @@ import {
   removeFromLocalStorage,
   saveToLocalStorage,
 } from "@/lib/storage/localStorage";
+import { delay } from "@/utils/delay";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { KeySquareIcon, LogInIcon, User2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -69,20 +70,36 @@ function LoginPage() {
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     ////////// reset err //////////////
-    setErr("");
     setIsLoading(true);
-    try {
-      const res = await axios.post("/api/login", inputValue);
-      router.push("/dang-ky-mon-hoc");
-      saveDataToLocal(res);
-    } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        setErr(error.response?.data.message || error?.message);
-        setInputValue((prev) => ({ ...prev, password: "" }));
+    setErr("");
+
+    let isSuccess = false;
+
+    while (!isSuccess) {
+      try {
+        const res = await axios.post("/api/login", inputValue);
+        saveDataToLocal(res);
+        router.push("/dang-ky-mon-hoc");
+        isSuccess = true; // THOÁT loop ngay
+      } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+          /// nếu lỗi trả về là lỗi 401 (auth) hay 500 (server) thì dừng lại
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 500
+          ) {
+            setIsLoading(false);
+            isSuccess = true; // THOÁT loop ngay
+          }
+          setErr(error.response?.data.message || error?.message);
+          setInputValue((prev) => ({ ...prev, password: "" }));
+        }
+
+        // Chờ 2 giây trước khi thử lại
+        await delay(2000);
       }
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
   return (
     <div className="grid place-items-center min-h-screen">
