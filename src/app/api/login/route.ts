@@ -10,14 +10,16 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.log("#384748", error);
-      return NextResponse.json(
-        {
-          ok: false,
-          message: JSON.stringify(error?.message),
-        },
-        { status: 500 }
-      );
+      const jsonResponse = {
+        ok: false,
+        message: error?.message || "Unknown error",
+      };
+      if (
+        error?.message.indexOf("Vui lòng kiểm tra tên đăng nhập và mật khẩu")
+      ) {
+        return NextResponse.json(jsonResponse, { status: 401 });
+      }
+      return NextResponse.json(jsonResponse, { status: 500 });
     }
   }
 }
