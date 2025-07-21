@@ -3,13 +3,15 @@
 import {
   CheckIcon,
   DatabaseBackup,
+  HardDriveUploadIcon,
+  PauseIcon,
   Save,
   TriangleAlertIcon,
   XIcon,
 } from "lucide-react";
-import { DataSubjectOntable } from "./page";
+import { data_ds_nhom_to } from "@/services/api/vnua/dataTypeResponse";
 import Modal from "@/components/common/Modal";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Loading from "@/components/common/Loading";
 import {
   getFromLocalStorage,
@@ -28,17 +30,17 @@ function RegisterBox({
   data = [],
   chooseSubjectRegister,
 }: {
-  data: DataSubjectOntable[];
+  data: data_ds_nhom_to[];
   chooseSubjectRegister: (
-    cb: (prev: DataSubjectOntable[]) => DataSubjectOntable[]
+    cb: (prev: data_ds_nhom_to[]) => data_ds_nhom_to[]
   ) => void;
 }) {
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
-  const [displayData, setDisplayData] = useState<DataSubjectOntable[]>([]);
+  const [displayData, setDisplayData] = useState<data_ds_nhom_to[]>([]);
   const [statusSubject, setStatusSubject] = useState<
     Record<string, StatusSubject>
   >({});
-  const startRegisterRef = useRef(false);
+  const [startRegister, setStartRegister] = useState(false);
 
   const timeDelay = 2000;
   const access_token = useMemo(() => {
@@ -52,7 +54,7 @@ function RegisterBox({
       setDisplayData(data);
     } else {
       const fromLocal =
-        getFromLocalStorage<DataSubjectOntable[]>(
+        getFromLocalStorage<data_ds_nhom_to[]>(
           nameKeyLocalStorage.subjectsChosen
         ) ?? [];
       setDisplayData(fromLocal);
@@ -72,12 +74,18 @@ function RegisterBox({
         access_token,
         id_to_hoc,
       });
-      return res.data.data.data;
+      return { ...res.data.data.data, message: res.data.data.message };
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
+        if (error?.response?.data.message.includes("expired")) {
+          return {
+            is_thanh_cong: false,
+            thong_bao_loi: "PHIÊN ĐĂNG NHẬP HẾT HẠN, ĐĂNG NHẬP LẠI",
+          };
+        }
         return {
           is_thanh_cong: false,
-          thong_bao_loi: "proxy ERROR: " + error?.response?.data.message,
+          thong_bao_loi: "QUÁ TẢI" + error?.response?.data.message,
         };
       }
       return {
@@ -89,7 +97,17 @@ function RegisterBox({
   console.log("RERENDER");
 
   const handleRegisterSubject = async () => {
-    startRegisterRef.current = true;
+    if (displayData.length <= 0) return;
+    setStartRegister(true);
+    const ListErrorResponse_StopCallApi = [
+      "vượt quá số tiết được phép trùng 15 tiết/ học kỳ.",
+      "Môn đã đạt không cho cải thiện",
+      "Nhóm tổ đã hết sĩ số. Vui lòng chọn nhóm tổ khác.",
+      "Môn học đăng ký không thuộc CTĐT",
+      "Cảnh báo: tài khoản của bạn không được đăng ký/hủy đăng ký ở thời điểm hiện tại.",
+      "Tiếp tục đăng ký?",
+      "expired",
+    ];
     const tasks = displayData.map(async (subject) => {
       setStatusSubject((prev) => ({
         ...prev,
@@ -99,15 +117,26 @@ function RegisterBox({
         },
       }));
 
-      let result: { is_thanh_cong: string; thong_bao_loi: string };
+      let result: {
+        is_thanh_cong: string;
+        thong_bao_loi: string;
+        message: string;
+      };
       do {
         result = await callApiRegisterSubject(subject.id_to_hoc);
 
         setStatusSubject((prev) => ({
           ...prev,
           [subject.id_to_hoc]: {
-            status: result.is_thanh_cong ? "done" : "fail",
-            message: result.thong_bao_loi,
+            // result.message là những thông báo hỏi xem có tiếp tục đăng ký nếu: trùng lịch, ...
+            /// mặc định sẽ bỏ qua
+            status: result.is_thanh_cong && !result.message ? "done" : "fail",
+            message:
+              result.thong_bao_loi ||
+              result.message.replace(
+                "Tiếp tục đăng ký?",
+                "MẶC ĐỊNH BỎ QUA, lên web trường đăng ký"
+              ),
           },
         }));
 
@@ -115,18 +144,28 @@ function RegisterBox({
           //delay trong 1 môn, call lại nếu fail
           await delay(timeDelay);
         }
-        if (
-          result.thong_bao_loi ===
-          "Trùng thời khóa biểu, tổng cộng trùng 20 tiết, vượt quá số tiết được phép trùng 15 tiết/ học kỳ."
-        ) {
-          break;
-        }
-        // delay mỗi môn
-      } while (!result.is_thanh_cong && startRegisterRef.current);
-      await delay(2000);
+
+        // note: some return true ngay khi co phan tu thoa man
+        const shouldSTOP = ListErrorResponse_StopCallApi.some((erStr) =>
+          result.thong_bao_loi.includes(erStr)
+        );
+        if (shouldSTOP) break;
+      } while (!result.is_thanh_cong && startRegister);
+      // await delay(2000);
     });
 
+    /// khi call xong hết rồi thì..
     await Promise.all(tasks);
+    setStartRegister(false);
+    // displayData.map((subject) => {
+    //   setStatusSubject((prev) => ({
+    //     ...prev,
+    //     [subject.id_to_hoc]: {
+    //       ...prev[subject.id_to_hoc],
+    //       status: "gi cung duoc",
+    //     },
+    //   }));
+    // });
     console.log("pause or all done");
   };
   return (
@@ -144,21 +183,23 @@ function RegisterBox({
               <h1 className="pl-2 flex-1 p-1 border-l-[5px] bg-white border-green-500  text-xl">
                 Môn học đã chọn
               </h1>
-              {startRegisterRef.current ? (
+              {startRegister ? (
                 <button
                   onClick={() => {
-                    startRegisterRef.current = false;
+                    setStartRegister(false);
                   }}
-                  className="absolute text-red-800 font-semibold cursor-pointer border-none hover:opacity-80 right-0 top-0 mt-2 mr-2 bg-red-300 p-2"
+                  className="absolute flex gap-x-2 items-center text-red-800 font-semibold cursor-pointer border-none hover:opacity-80 right-0 top-0 mt-2 mr-2 bg-red-300 p-2"
                 >
-                  Dừng đăng ký
+                  <PauseIcon size={19} />
+                  <p>Dừng đăng ký</p>
                 </button>
               ) : (
                 <button
                   onClick={handleRegisterSubject}
-                  className="absolute text-green-800 font-semibold cursor-pointer border-none hover:opacity-80 right-0 top-0 mt-2 mr-2 bg-green-300 p-2"
+                  className="absolute flex gap-x-2 items-center text-green-800 font-semibold cursor-pointer border-none hover:opacity-80 right-0 top-0 mt-2 mr-2 bg-green-300 p-2"
                 >
-                  Đăng ký tất cả
+                  <HardDriveUploadIcon size={19} />
+                  <p>Đăng ký tất cả</p>
                 </button>
               )}
             </div>
@@ -191,47 +232,47 @@ function RegisterBox({
                           </p>
                         )}
                     </div>
-                    <>
+                    <div className="flex gap-x-2">
                       {statusSubject[item.id_to_hoc] &&
                       statusSubject[item.id_to_hoc]?.status == "done" ? (
-                        <span className="bg-green-100 text-green-700 p-2 max-h-min">
+                        <span className="bg-green-100 text-green-700 p-1  max-h-min">
                           <CheckIcon size={19} />
                         </span>
                       ) : statusSubject[item.id_to_hoc]?.status == "fail" ? (
-                        <span className="bg-orange-100 text-orange-700 p-2 max-h-min">
+                        <span className="bg-orange-100 text-orange-700 p-1  max-h-min">
                           <TriangleAlertIcon size={19} />
                         </span>
                       ) : statusSubject[item.id_to_hoc]?.status == "waiting" ? (
                         <Loading global={false} />
                       ) : (
-                        <span
-                          onClick={() => {
-                            const subjects =
-                              getFromLocalStorage<DataSubjectOntable[]>(
-                                nameKeyLocalStorage.subjectsChosen
-                              ) ?? [];
-
-                            const filtered = subjects.filter(
-                              (subject) => item.id_to_hoc !== subject.id_to_hoc
-                            );
-
-                            saveToLocalStorage(
-                              nameKeyLocalStorage.subjectsChosen,
-                              filtered
-                            );
-                            chooseSubjectRegister((prev) =>
-                              prev.filter(
-                                (subject) =>
-                                  subject.id_to_hoc !== item.id_to_hoc
-                              )
-                            );
-                          }}
-                          className="p-1 bg-red-200 text-red-700 cursor-pointer max-h-min"
-                        >
-                          <XIcon size={19} />
-                        </span>
+                        ""
                       )}
-                    </>
+                      <span
+                        onClick={() => {
+                          const subjects =
+                            getFromLocalStorage<data_ds_nhom_to[]>(
+                              nameKeyLocalStorage.subjectsChosen
+                            ) ?? [];
+
+                          const filtered = subjects.filter(
+                            (subject) => item.id_to_hoc !== subject.id_to_hoc
+                          );
+
+                          saveToLocalStorage(
+                            nameKeyLocalStorage.subjectsChosen,
+                            filtered
+                          );
+                          chooseSubjectRegister((prev) =>
+                            prev.filter(
+                              (subject) => subject.id_to_hoc !== item.id_to_hoc
+                            )
+                          );
+                        }}
+                        className="p-1 bg-red-200 text-red-700 cursor-pointer max-h-min"
+                      >
+                        <XIcon size={19} />
+                      </span>
+                    </div>
                   </div>
                 ))
               ) : (
