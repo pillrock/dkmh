@@ -17,20 +17,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import SearchBox from "./SearchBox";
 import TableBox from "./tableBox";
 import RegisterBox from "./registerBox";
+import SubjectsRegistered from "./SubjectsRegistered";
 // import TestCallApi from "./TestCallApi";
 
 type dataUser = {
   lop: string;
 };
-export interface DataSubjectOntable extends data_ds_nhom_to {
-  ten_mon?: string;
-  lop?: string;
-}
 
 function RegisterSubject() {
   const { setIsLoading } = useGlobalState();
   const router = useRouter();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data, startCallAPI, isLoad } = useCheckTokenAlive();
   const [optionSortDataSubject, setOptionSortDataObject] = useState<
     string | null
@@ -38,17 +36,14 @@ function RegisterSubject() {
   const [allDataSubject, setAllDataSubject] =
     useState<AllDataSubject_DATARESPONSE_dataChild | null>(null);
   // const [listDataSubjectOnTable, setListDataSubjectOnTable] = useState<
-  //   DataSubjectOntable[] | null
+  //   data_ds_nhom_to[] | null
   // >(null);
   const [subjectChosenFromSearch, setSubjectChosenFromSearch] = useState<
     string | null
   >(null);
   const [listSubjectRegister, setListSubjectRegister] = useState<
-    DataSubjectOntable[]
+    data_ds_nhom_to[]
   >([]);
-
-  console.log(listSubjectRegister);
-  console.log("subject choose: ", subjectChosenFromSearch);
 
   useEffect(() => {
     //// check token alive
@@ -78,7 +73,6 @@ function RegisterSubject() {
         return { ok: true, ...res.data };
       } catch (error: unknown) {
         if (error instanceof AxiosError) {
-          console.log(error?.response?.data.message || error.message);
           return { ok: false, ...error?.response?.data };
         }
       }
@@ -96,16 +90,11 @@ function RegisterSubject() {
             nameKeyLocalStorage.access_token
           ) as string,
         });
-        // const res = await vnuaAPI.getAllDataSubject(
-        //   getFromLocalStorage(nameKeyLocalStorage.access_token) as string
-        // );
-        console.log(res);
 
         setAllDataSubject(res.data.data.data); /// response của vnua
         return { ok: true, ...res.data };
       } catch (error: unknown) {
         if (error instanceof AxiosError) {
-          console.log(error?.response?.data.message || error.message);
           return { ok: false, ...error?.response?.data };
         }
       }
@@ -114,11 +103,7 @@ function RegisterSubject() {
     (async () => {
       try {
         setIsLoading(true);
-        const [result, result2] = await Promise.all([
-          getMoreDataStudent(),
-          getALlDataSubject(),
-        ]);
-        console.log(result, result2);
+        await Promise.all([getMoreDataStudent(), getALlDataSubject()]);
       } catch (error) {
         console.error("#2342:", error);
       } finally {
@@ -154,7 +139,7 @@ function RegisterSubject() {
 
   //// filter mặc định, các môn mở theo lớp
   const listDataSubjectOnTable = useMemo(() => {
-    const nhom_to: DataSubjectOntable[] = allDataSubject?.ds_nhom_to ?? [];
+    const nhom_to: data_ds_nhom_to[] = allDataSubject?.ds_nhom_to ?? [];
     if (optionSortDataSubject === "1") {
       const lop = (
         getFromLocalStorage(nameKeyLocalStorage.dataUser) as { lop: string }
@@ -174,7 +159,6 @@ function RegisterSubject() {
           ...item,
           ten_mon: getNameSubjectFromCodeSubject(item.ma_mon),
         }));
-      console.log("filter: ", dataSubjectFilterByCode);
 
       return dataSubjectFilterByCode;
     }
@@ -220,6 +204,7 @@ function RegisterSubject() {
         listData={listDataSubjectOnTable || []}
         chooseSubjectRegister={setListSubjectRegister}
       />
+      <SubjectsRegistered />
     </div>
   );
 }
