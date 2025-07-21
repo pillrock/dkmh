@@ -7,12 +7,13 @@ import {
   getFromLocalStorage,
   nameKeyLocalStorage,
 } from "@/lib/storage/localStorage";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
 function ClientLayout({ children }: { children: ReactNode }) {
   const { isLoading } = useGlobalState();
   const pathName = usePathname();
+  const router = useRouter();
 
   const [dataUser, setDataUser] = useState<{
     ma_sv: string;
@@ -28,6 +29,13 @@ function ClientLayout({ children }: { children: ReactNode }) {
     }
   }, [pathName]);
 
+  const handleLogout = () => {
+    localStorage.removeItem(nameKeyLocalStorage.access_token);
+    localStorage.removeItem(nameKeyLocalStorage.dataUser);
+    setDataUser(null);
+    router.push("/dang-nhap");
+  };
+
   return (
     <>
       {isLoading && <Loading />}
@@ -35,6 +43,7 @@ function ClientLayout({ children }: { children: ReactNode }) {
         <Header
           ma_sv={dataUser?.ma_sv || ""}
           ten_day_du={dataUser?.name || ""}
+          handleLogout={handleLogout}
         />
       </div>
       <div className={`md:px-[10%] xl:px-[15%] p-2 min-h-screen antialiased`}>

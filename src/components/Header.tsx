@@ -1,7 +1,15 @@
 import { LogOutIcon } from "lucide-react";
 import Image from "next/image";
 
-function Header({ ma_sv, ten_day_du }: { ma_sv: string; ten_day_du: string }) {
+function Header({
+  ma_sv,
+  ten_day_du,
+  handleLogout,
+}: {
+  ma_sv: string;
+  ten_day_du: string;
+  handleLogout: () => void;
+}) {
   return (
     <div className="md:px-[15%] z-10 bg-white px-2 fixed top-0 w-full items-center shadow-md flex justify-between py-2 xl:px-[20%]">
       <div>
@@ -19,7 +27,10 @@ function Header({ ma_sv, ten_day_du }: { ma_sv: string; ten_day_du: string }) {
             {ma_sv}, {ten_day_du}
           </span>
         )}
-        <span className="p-2 bg-red-300 text-red-700 cursor-pointer rounded-md">
+        <span
+          onClick={handleLogout}
+          className="p-2 bg-red-300 text-red-700 cursor-pointer rounded-md"
+        >
           <LogOutIcon size={19} />
         </span>
       </div>
